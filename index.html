@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Catcher</title>
+    <style>
+        body {
+            background-color: #050507;
+            color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            /* Verhindert das Markieren von Text beim wilden Klicken */
+            user-select: none; 
+        }
+        h1 { 
+            margin-bottom: 5px; 
+            font-weight: 300; 
+            letter-spacing: 4px; 
+            font-size: 1.6em;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+        p { 
+            color: #6b7280; 
+            margin-bottom: 20px; 
+            font-size: 0.85em; 
+            text-align: center; 
+            max-width: 600px;
+            letter-spacing: 0.5px;
+        }
+        canvas {
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            background: #020203;
+            cursor: crosshair; /* Passt besser zu einem Spiel */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>STAR CATCHER</h1>
+    <p>Interactive Canvas Game. Move your mouse to pilot the ship and collect energy cores.</p>
+    
+    <canvas id="gameCanvas" width="850" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- SPIEL-VARIABLEN ---
+        let score = 0;
+        
+        // Maus-Position (startet in der Mitte)
+        const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+
+        // Die Rakete (Spieler)
+        const ship = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: 0,
+            vy: 0,
+            angle: 0
+        };
+
+        // Der Stern (Ziel)
+        let star = {
+            x: Math.random() * (canvas.width - 60) + 30,
+            y: Math.random() * (canvas.height - 60) + 30,
+            hue: Math.floor(Math.random() * 360),
+            radius: 8,
+            pulse: 0
+        };
+
+        // Partikel für die Explosion, wenn ein Stern eingesammelt wird
+        let particles = [];
+
+        // --- EINGABE (MAUS / TOUCH) ---
+        function updateMouse(e) {
+            const rect = canvas.getBoundingClientRect();
+            // Unterstützt Maus und Touchscreens
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            mouse.x = clientX - rect.left;
+            mouse.y = clientY - rect.top;
+        }
+        window.addEventListener('mousemove', updateMouse);
+        window.addEventListener('touchmove', updateMouse);
+
+        // --- SPIEL-LOGIK ---
+        function spawnNewStar() {
+            star.x = Math.random() * (canvas.width - 60) + 30;
+            star.y = Math.random() * (canvas.height - 60) + 30;
+            star.hue = Math.floor(Math.random() * 360);
+        }
+
+        function createExplosion(x, y, hue) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 1.0, // 1.0 bedeutet 100% Lebensenergie
+                    hue: hue
+                });
+            }
+        }
+
+        function update() {
+            // 1. Rakete bewegen (Folgt der Maus butterweich)
+            let dx = mouse.x - ship.x;
+            let dy = mouse.y - ship.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Failsafe für Drehung (um NaN zu vermeiden)
+            if (distance > 0) {
+                // + Math.PI/2 dreht die Rakete richtig zur Maus
+                ship.angle = Math.atan2(dy, dx) + Math.PI / 2; 
+            }
+
+            // Beschleunigung, wenn die Maus weit genug weg ist
+            if (distance > 5) {
+                ship.vx += (dx / distance) * 0.6;
+                ship.vy += (dy / distance) * 0.6;
+            }
+
+            // Reibung (Bremse), damit das Schiff nicht ewig weitergleitet
+            ship.vx *= 0.90;
+            ship.vy *= 0.90;
+
+            ship.x += ship.vx;
+            ship.y += ship.vy;
+
+            // Ränder begrenzen (Schiff prallt sanft ab)
+            if (ship.x < 15) { ship.x = 15; ship.vx *= -0.5; }
+            if (ship.x > canvas.width - 15) { ship.x = canvas.width - 15; ship.vx *= -0.5; }
+            if (ship.y < 15) { ship.y = 15; ship.vy *= -0.5; }
+            if (ship.y > canvas.height - 15) { ship.y = canvas.height - 15; ship.vy *= -0.5; }
+
+            // 2. Stern pulsieren lassen (Visueller Effekt)
+            star.pulse += 0.1;
+            let currentStarRadius = star.radius + Math.sin(star.pulse) * 2;
+
+            // 3. Kollision überprüfen (Hat das Schiff den Stern berührt?)
+            let distToStar = Math.sqrt((ship.x - star.x) ** 2 + (ship.y - star.y) ** 2);
+            if (distToStar < 25) {
+                score++;
+                createExplosion(star.x, star.y, star.hue);
+                spawnNewStar();
+            }
+
+            // 4. Partikel updaten
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.03; // Partikel verblassen
+                if (p.life <= 0) {
+                    particles.splice(i, 1); // Löschen, wenn tot
+                }
+            }
+        }
+
+        // --- ZEICHNEN ---
+        function draw() {
+            // Hintergrund schwarz übermalen
+            ctx.fillStyle = '#020203';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Partikel zeichnen
+            for (let p of particles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${p.hue}, 100%, 60%, ${p.life})`;
+                ctx.fill();
+            }
+
+            // 2. Stern zeichnen
+            let currentStarRadius = star.radius + Math.sin(star.pulse) * 2;
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, currentStarRadius, 0, Math.PI * 2);
+            ctx.fillStyle = `hsl(${star.hue}, 100%, 70%)`;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = `hsl(${star.hue}, 100%, 60%)`;
+            ctx.fill();
+            ctx.shadowBlur = 0; // Wichtig: Schatten resetten für Performance!
+
+            // 3. Rakete zeichnen
+            ctx.save();
+            ctx.translate(ship.x, ship.y);
+            ctx.rotate(ship.angle);
+
+            // Triebwerkstrahl (flackert basierend auf Geschwindigkeit)
+            let speed = Math.sqrt(ship.vx * ship.vx + ship.vy * ship.vy);
+            if (speed > 1) {
+                ctx.beginPath();
+                ctx.moveTo(-5, 10);
+                // Die Flamme zuckt zufällig nach unten
+                ctx.lineTo(0, 15 + Math.random() * 15 * (speed/10)); 
+                ctx.lineTo(5, 10);
+                ctx.fillStyle = '#ff7b00';
+                ctx.fill();
+            }
+
+            // Der Raketen-Körper (Elegantes Dreieck)
+            ctx.beginPath();
+            ctx.moveTo(0, -15); // Spitze
+            ctx.lineTo(10, 10); // Rechte Ecke
+            ctx.lineTo(-10, 10); // Linke Ecke
+            ctx.closePath();
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fill();
+            
+            ctx.restore();
+
+            // 4. Score (Punktestand) oben links zeichnen
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.font = '24px "Segoe UI", sans-serif';
+            ctx.fillText(`SCORE: ${score}`, 20, 40);
+        }
+
+        // --- DER GAME LOOP ---
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        // Spiel starten
+        loop();
+    </script>
+</body>
+</html>
