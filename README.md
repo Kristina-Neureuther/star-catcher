@@ -1,33 +1,21 @@
-# Star Catcher: Interactive Canvas Physics
+# Star Catcher 🚀
 
-A lightweight, interactive 2D physics engine and game loop built entirely with Vanilla JavaScript and the HTML5 Canvas API. 
+An elegant, interactive 2D space game built entirely from scratch using HTML5 Canvas and Vanilla JavaScript. Pilot your rocket through deep space and gather the stars!
 
-This project demonstrates core concepts of interactive web development, including continuous rendering loops, vector-based mathematics, collision detection, and dynamic state management without the use of external game engines or libraries.
-
-## 🚀 Technical Architecture
-
-The simulation is built around a custom game loop utilizing `requestAnimationFrame` for smooth 60fps rendering. It highlights several key technical competencies:
-
-### 1. Vector Math & Trigonometry
-* **Rotational Kinematics:** The player's ship dynamically tracks the cursor's position using the `Math.atan2()` function, allowing for fluid, continuous rotational alignment.
-* **Velocity & Friction:** Movement is not mapped 1:1 to the mouse coordinates. Instead, the cursor acts as an attractor point. The ship accelerates towards it, while a constant damping factor (friction) is applied to its velocity vectors (`vx`, `vy`) to create a smooth, drifting flight mechanic.
-
-### 2. Collision Detection
-* **Distance Calculation:** The engine continuously calculates the distance between the ship's coordinates and the target (the star) using the Pythagorean theorem. If the threshold is crossed, a collision event is triggered.
-
-### 3. Dynamic Particle System
-* **Array Management:** Upon collision, the game instantiates a burst of particle objects. 
-* **Garbage Collection:** Each particle is assigned a lifecycle (`life`). As the animation progresses, their opacity decreases. Once a particle's lifecycle reaches zero, it is dynamically spliced from the rendering array to prevent memory leaks and ensure optimal performance.
-
-## 💻 Tech Stack
-* **HTML5 Canvas:** For high-performance 2D rendering.
-* **CSS3:** For modern, responsive layout and UI styling.
-* **Vanilla JavaScript (ES6+):** Object-oriented principles and event-driven interaction handling.
-
-## 🎮 How to Play
-1. Move your mouse (or drag your finger on a touchscreen) across the canvas.
-2. The ship will automatically rotate and thrust towards your cursor.
-3. Collect the glowing stars to increase your score and trigger the particle effects.
+## 🎮 Live Demo
+**No setup or technical knowledge required!** You can launch and play the game instantly in your browser by clicking the link below:
+👉 [**CLICK HERE TO PLAY THE GAME**](https://kristina-neureuther.github.io/star-catcher/)
 
 ---
-*Created as part of a technical portfolio demonstrating interactive web design and foundational software engineering principles.*
+
+## 🕹️ How to Play
+1. Click the **Live Demo** link above to open the game.
+2. Move your computer mouse (or drag your finger on a mobile touchscreen).
+3. Your rocket will automatically rotate and smoothly glide toward your cursor.
+4. Collect all **25 gold stars** scattered across the screen. Once they are all gone, you win!
+
+## 💻 Technical Highlights (For Developers)
+For those interested in the software architecture, this project demonstrates:
+* **Interactive Physics:** Smooth object tracking utilizing velocity vectors, acceleration, and artificial friction (damping) for a realistic drifting feel in space.
+* **Collision Detection:** Continuous real-time calculations using the Pythagorean theorem to detect when the ship touches a star.
+* **Dynamic Particle Systems:** A custom particle engine that creates golden explosions upon collection, featuring automatic memory cleanup (garbage collection) once particles fade out.
