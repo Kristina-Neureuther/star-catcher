@@ -2,6 +2,8 @@
 
 An elegant, interactive 2D space game built entirely from scratch using HTML5 Canvas and Vanilla JavaScript. Pilot your rocket through deep space and gather the stars!
 
+## Kristina Neureuther – Systems Thinking & Strategy
+
 ## 🎮 Live Demo
 **No setup or technical knowledge required!** You can launch and play the game instantly in your browser by clicking the link below:
 👉 [**CLICK HERE TO PLAY THE GAME**](https://kristina-neureuther.github.io/star-catcher/)
